@@ -1,0 +1,106 @@
+<div class="product-list-container">
+  <div class="header">
+    <h1>Product Management</h1>
+    <a routerLink="/products/new" class="btn btn-primary">Add New Product</a>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input
+        type="text"
+        [value]="searchTerm()"
+        (input)="onSearchChange($event)"
+        (keyup.enter)="onSearch()"
+        placeholder="Search by Name or SKU..."
+        class="search-input"
+      />
+      <button (click)="onSearch()" class="btn btn-search">Search</button>
+    </div>
+
+    <div class="filter-options">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [checked]="includeDeleted()"
+          (change)="includeDeleted.set(!includeDeleted()); toggleIncludeDeleted()"
+        />
+        Show Deleted Products
+      </label>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Loading products...</div>
+  } @else {
+    <div class="table-container">
+      <table class="products-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (products().length === 0) {
+            <tr>
+              <td colspan="7" class="no-data">No products found</td>
+            </tr>
+          } @else {
+            @for (product of products(); track product.id) {
+              <tr [class.deleted]="product.isDeleted">
+                <td>{{ product.id }}</td>
+                <td>{{ product.sku }}</td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.description || '-' }}</td>
+                <td>{{ formatCurrency(product.price) }}</td>
+                <td>{{ formatDate(product.createdAtUtc) }}</td>
+                <td class="actions">
+                  <a [routerLink]="['/products', product.id, 'edit']" class="btn btn-edit">Edit</a>
+                  @if (!product.isDeleted) {
+                    <button (click)="deleteProduct(product.id)" class="btn btn-delete">Delete</button>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button
+        (click)="changePage('prev')"
+        [disabled]="currentPage() === 1 || loading()"
+        class="btn btn-pagination"
+      >
+        Previous
+      </button>
+      <span class="page-info">Page {{ currentPage() }}</span>
+      <button
+        (click)="changePage('next')"
+        [disabled]="products().length < pageSize() || loading()"
+        class="btn btn-pagination"
+      >
+        Next
+      </button>
+    </div>
+
+    @if (products().length > 0) {
+      <div class="export-section">
+        <button (click)="exportToCsv()" class="btn btn-export">Export to CSV</button>
+      </div>
+    }
+  }
+</div>
+
